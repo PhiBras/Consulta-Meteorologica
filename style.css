@@ -1,0 +1,194 @@
+        /* DEFINIÇÕES DE TEMAS (CSS VARIABLES) */
+        :root[data-theme="dark"] {
+            --bg-main: #0c0c0e;
+            --bg-card: #16161a;
+            --bg-card-hover: #1f1f24;
+            --border-color: #2a2a32;
+            --brand-orange: #ff6600;
+            --brand-orange-hover: #e65c00;
+            --brand-orange-light: rgba(255, 102, 0, 0.12);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+            --chart-grid: rgba(255, 255, 255, 0.08);
+        }
+
+        :root[data-theme="light"] {
+            --bg-main: #f4f5f8;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f9fafb;
+            --border-color: #e5e7eb;
+            --brand-orange: #ea580c;
+            --brand-orange-hover: #c2410c;
+            --brand-orange-light: rgba(234, 88, 12, 0.12);
+            --text-main: #111827;
+            --text-muted: #4b5563;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --chart-grid: rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .bg-custom-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        .bg-custom-card:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .accent-color {
+            color: var(--brand-orange);
+        }
+
+        .accent-bg {
+            background-color: var(--brand-orange);
+        }
+
+        .accent-border {
+            border-color: var(--brand-orange);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-orange);
+        }
+
+        /* Pulsing Glow Effect */
+        .glow-orange {
+            box-shadow: 0 0 15px var(--brand-orange-light);
+        }
+
+        /* Compass needle transition */
+        .compass-arrow {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Weather condition visual highlights */
+        .weather-hero-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255,102,0,0.05) 100%);
+        }
+
+        /* Autocomplete dropdown positioning */
+        .search-results-dropdown {
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 50;
+        }
+
+        #humidityBar,
+        #uvBar {
+            width: 0%;
+        }
+
+        .forecast-temp-range {
+            width: var(--forecast-temp-range);
+        }
+
+        #searchInput {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border-color: var(--border-color);
+            opacity: 1;
+        }
+
+        #searchInput::placeholder {
+            color: var(--text-muted);
+            opacity: 1;
+        }
+
+        #locationButton {
+            min-width: 44px;
+            min-height: 44px;
+            background-color: var(--bg-main);
+            color: var(--brand-orange);
+            border-color: var(--border-color);
+        }
+
+        #locationButton i {
+            color: var(--brand-orange);
+            font-size: 1rem;
+        }
+
+        .theme-toggle {
+            position: relative;
+            display: inline-flex;
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            background-color: var(--bg-main);
+            color: var(--brand-orange);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--brand-orange);
+            transform: translateY(-1px);
+        }
+
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--brand-orange);
+            outline-offset: 2px;
+        }
+
+        .theme-toggle-icon {
+            position: absolute;
+            font-size: 1rem;
+            transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease;
+        }
+
+        .theme-icon-moon {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+        }
+
+        .theme-icon-sun {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+
+        :root[data-theme="light"] .theme-icon-moon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+
+        :root[data-theme="light"] .theme-icon-sun {
+            opacity: 1;
+            transform: rotate(0) scale(1);
+            color: #c2410c;
+        }
+
+        body,
+        header,
+        .bg-custom-card,
+        #searchInput,
+        #locationButton {
+            transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+        }

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APIMETEO - Consulta Meteorológica Profissional</title>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./tailwind.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- TOP HEADER BAR -->
+    <header class="border-b border-brand-border bg-brand-cardBg sticky top-0 z-40 backdrop-blur-md bg-opacity-90 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl accent-bg flex items-center justify-center text-black font-extrabold text-xl shadow-lg shadow-orange-500/20">
+                    <i class="fa-solid fa-cloud-sun-rain"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight leading-none">APIMETEO</h1>
+                    <p class="text-xs text-brand-textMuted hidden sm:block">Dados meteorológicos em tempo real (Open-Meteo)</p>
+                </div>
+            </div>
+
+            <!-- Header Right Controls (Theme Selector + Status) -->
+            <div class="flex items-center gap-3">
+                <button id="themeToggleBtn" data-action="toggle-theme" type="button" aria-label="Ativar tema claro" title="Ativar tema claro" class="theme-toggle">
+                    <i class="fa-solid fa-moon theme-toggle-icon theme-icon-moon" aria-hidden="true"></i>
+                    <i class="fa-solid fa-sun theme-toggle-icon theme-icon-sun" aria-hidden="true"></i>
+                </button>
+
+                <!-- API Refresh Button -->
+                <button data-action="refresh-data" title="Atualizar dados agora" class="p-2 rounded-lg bg-brand-darkBg border border-brand-border hover:border-brand-orange text-brand-textMain transition-all active:scale-95">
+                    <i class="fa-solid fa-rotate text-sm" id="refreshSpinner"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- SEARCH BAR & QUICK CHIPS -->
+        <section class="space-y-3">
+            <div class="relative w-full">
+                <div class="relative flex items-center">
+                    <span class="absolute left-4 text-brand-textMuted">
+                        <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                    </span>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Digite o nome da cidade (ex: Salvador, São Paulo, Lisboa, Tokyo)..."
+                        autocomplete="off"
+                        class="w-full pl-12 pr-32 py-3.5 bg-brand-cardBg border-2 border-brand-border rounded-xl text-brand-textMain placeholder-brand-textMuted focus:outline-none focus:border-brand-orange transition-all font-medium text-sm sm:text-base shadow-sm"
+                    />
+
+                    <!-- Search Action Buttons Right -->
+                    <div class="absolute right-2 flex items-center gap-1.5">
+                        <button
+                            id="locationButton"
+                            data-action="get-location"
+                            title="Usar minha localização atual"
+                            class="p-2.5 rounded-lg bg-brand-darkBg border border-brand-border hover:border-brand-orange text-brand-orange transition-all flex items-center justify-center text-sm"
+                        >
+                            <i class="fa-solid fa-location-crosshairs"></i>
+                        </button>
+                        <button
+                            data-action="execute-search"
+                            class="px-4 py-2.5 rounded-lg accent-bg font-bold text-black text-xs sm:text-sm hover:opacity-90 transition-all flex items-center gap-2 shadow-md"
+                        >
+                            <span>Buscar</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Autocomplete Dropdown List -->
+                <div id="autocompleteResults" class="hidden absolute top-full left-0 right-0 mt-2 bg-brand-cardBg border border-brand-border rounded-xl shadow-2xl search-results-dropdown divide-y divide-brand-border">
+                    <!-- Suggestions rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- Quick Access Chips -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+                <span class="text-brand-textMuted font-semibold flex items-center gap-1 shrink-0">
+                    <i class="fa-solid fa-fire accent-color"></i> Populares:
+                </span>
+                <button data-action="load-city" data-city-lat="-12.9714" data-city-lon="-38.5014" data-city-name="Salvador" data-city-state="Bahia" data-city-country="Brasil" class="chip-btn px-3 py-1.5 rounded-lg bg-brand-cardBg border border-brand-border hover:border-brand-orange transition-all shrink-0">Salvador</button>
+                <button data-action="load-city" data-city-lat="-23.5505" data-city-lon="-46.6333" data-city-name="São Paulo" data-city-state="São Paulo" data-city-country="Brasil" class="chip-btn px-3 py-1.5 rounded-lg bg-brand-cardBg border border-brand-border hover:border-brand-orange transition-all shrink-0">São Paulo</button>
+                <button data-action="load-city" data-city-lat="-22.9068" data-city-lon="-43.1729" data-city-name="Rio de Janeiro" data-city-state="Rio de Janeiro" data-city-country="Brasil" class="chip-btn px-3 py-1.5 rounded-lg bg-brand-cardBg border border-brand-border hover:border-brand-orange transition-all shrink-0">Rio de Janeiro</button>
+                <button data-action="load-city" data-city-lat="-15.7801" data-city-lon="-47.9292" data-city-name="Brasília" data-city-state="Distrito Federal" data-city-country="Brasil" class="chip-btn px-3 py-1.5 rounded-lg bg-brand-cardBg border border-brand-border hover:border-brand-orange transition-all shrink-0">Brasília</button>
+                <button data-action="load-city" data-city-lat="38.7223" data-city-lon="-9.1393" data-city-name="Lisboa" data-city-state="Lisboa" data-city-country="Portugal" class="chip-btn px-3 py-1.5 rounded-lg bg-brand-cardBg border border-brand-border hover:border-brand-orange transition-all shrink-0">Lisboa</button>
+                <button data-action="load-city" data-city-lat="40.7128" data-city-lon="-74.0060" data-city-name="Nova York" data-city-state="New York" data-city-country="Estados Unidos" class="chip-btn px-3 py-1.5 rounded-lg bg-brand-cardBg border border-brand-border hover:border-brand-orange transition-all shrink-0">Nova York</button>
+            </div>
+        </section>
+
+        <!-- ERROR / NOTIFICATION TOAST -->
+        <div id="errorToast" class="hidden p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 flex items-center justify-between gap-3 text-sm">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                <span id="errorMessage">Não foi possível carregar os dados.</span>
+            </div>
+            <button data-action="hide-error" class="text-red-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- MAIN WEATHER DASHBOARD -->
+        <div id="weatherContent" class="space-y-6">
+
+            <!-- HERO CARD (CURRENT WEATHER) -->
+            <section class="bg-custom-card weather-hero-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+                <!-- Background Accent Circle -->
+                <div class="absolute -right-16 -bottom-16 w-64 h-64 rounded-full accent-bg opacity-10 blur-3xl pointer-events-none"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center relative z-10">
+
+                    <!-- Location & Temperature Overview -->
+                    <div class="md:col-span-7 space-y-4">
+                        <div class="flex items-center gap-2 text-brand-textMuted text-xs font-semibold tracking-wider uppercase">
+                            <i class="fa-solid fa-location-dot accent-color"></i>
+                            <span id="locationBadge">Salvador, Bahia - Brasil</span>
+                            <span id="lastUpdated" class="ml-auto text-[10px] opacity-75">Atualizado agora</span>
+                        </div>
+
+                        <div class="flex items-baseline gap-4 flex-wrap">
+                            <h2 class="text-6xl sm:text-7xl font-extrabold tracking-tight font-mono accent-color" id="currentTemp">
+                                --°C
+                            </h2>
+                            <div>
+                                <p class="text-lg font-bold capitalize text-brand-textMain" id="weatherCondition">
+                                    Carregando...
+                                </p>
+                                <p class="text-xs text-brand-textMuted" id="feelsLike">
+                                    Sensação térmica: --°C
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Today's High / Low & Quick Stats -->
+                        <div class="flex flex-wrap items-center gap-4 text-xs font-medium pt-2 border-t border-brand-border/60">
+                            <span class="flex items-center gap-1.5 bg-brand-darkBg px-3 py-1.5 rounded-lg border border-brand-border">
+                                <i class="fa-solid fa-arrow-up text-red-500"></i> Máx: <strong id="todayMax">--°C</strong>
+                            </span>
+                            <span class="flex items-center gap-1.5 bg-brand-darkBg px-3 py-1.5 rounded-lg border border-brand-border">
+                                <i class="fa-solid fa-arrow-down text-blue-400"></i> Mín: <strong id="todayMin">--°C</strong>
+                            </span>
+                            <span class="flex items-center gap-1.5 bg-brand-darkBg px-3 py-1.5 rounded-lg border border-brand-border">
+                                <i class="fa-solid fa-cloud-rain text-blue-500"></i> Chuva hoje: <strong id="todayRainProb">--%</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Main Dynamic Weather Icon -->
+                    <div class="md:col-span-5 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-brand-border/60 pt-4 md:pt-0 md:pl-6">
+                        <div id="mainWeatherIconContainer" class="text-7xl sm:text-8xl accent-color my-2 filter drop-shadow-lg transition-transform hover:scale-105 duration-300">
+                            <i class="fa-solid fa-sun animate-pulse"></i>
+                        </div>
+                        <p id="weatherAdvice" class="text-center text-xs text-brand-textMuted italic max-w-xs mt-2">
+                            Aguardando dados...
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- DETAILED METRICS GRID (6 CARDS) -->
+            <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+
+                <!-- Umidade -->
+                <div class="bg-custom-card rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div class="flex items-center justify-between text-brand-textMuted text-xs font-semibold">
+                        <span>UMIDADE</span>
+                        <i class="fa-solid fa-droplet text-blue-400"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-brand-textMain" id="humidityVal">--%</div>
+                        <p class="text-[11px] text-brand-textMuted mt-1" id="humidityStatus">Normal</p>
+                    </div>
+                    <div class="w-full bg-brand-darkBg rounded-full h-1.5 border border-brand-border overflow-hidden">
+                        <div id="humidityBar" class="accent-bg h-full rounded-full transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Vento -->
+                <div class="bg-custom-card rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div class="flex items-center justify-between text-brand-textMuted text-xs font-semibold">
+                        <span>VENTO</span>
+                        <i class="fa-solid fa-wind accent-color"></i>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div id="compassContainer" class="w-8 h-8 rounded-full border border-brand-border bg-brand-darkBg flex items-center justify-center shrink-0">
+                            <i id="windDirectionArrow" class="fa-solid fa-location-arrow text-xs accent-color compass-arrow"></i>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold font-mono text-brand-textMain" id="windSpeedVal">-- km/h</div>
+                            <p class="text-[10px] text-brand-textMuted uppercase font-mono" id="windDirText">DIR: N/A</p>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-brand-textMuted">Velocidade em 10m</div>
+                </div>
+
+                <!-- Índice UV -->
+                <div class="bg-custom-card rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div class="flex items-center justify-between text-brand-textMuted text-xs font-semibold">
+                        <span>ÍNDICE UV ATUAL</span>
+                        <i class="fa-solid fa-sun text-yellow-500"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-brand-textMain" id="uvVal">--</div>
+                        <span id="uvBadge" class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded bg-green-500/20 text-green-400">
+                            Baixo
+                        </span>
+                    </div>
+                    <div class="w-full bg-brand-darkBg rounded-full h-1.5 border border-brand-border overflow-hidden">
+                        <div id="uvBar" class="bg-yellow-400 h-full rounded-full transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Pressão Atmosférica -->
+                <div class="bg-custom-card rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div class="flex items-center justify-between text-brand-textMuted text-xs font-semibold">
+                        <span>PRESSÃO</span>
+                        <i class="fa-solid fa-gauge-high text-purple-400"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-brand-textMain" id="pressureVal">-- hPa</div>
+                        <p class="text-[11px] text-brand-textMuted mt-1" id="pressureStatus">Estável</p>
+                    </div>
+                    <div class="text-[10px] text-brand-textMuted">Ao nível do mar</div>
+                </div>
+
+                <!-- Precipitação -->
+                <div class="bg-custom-card rounded-xl p-4 flex flex-col justify-between space-y-3">
+                    <div class="flex items-center justify-between text-brand-textMuted text-xs font-semibold">
+                        <span>PRECIPITAÇÃO</span>
+                        <i class="fa-solid fa-cloud-showers-heavy text-cyan-400"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold font-mono text-brand-textMain" id="precipVal">-- mm</div>
+                        <p class="text-[11px] text-brand-textMuted mt-1" id="precipProb">Prob: --%</p>
+                    </div>
+                    <div class="text-[10px] text-brand-textMuted">Acumulado diário</div>
+                </div>
+
+                <!-- Sol (Nascer / Pôr) -->
+                <div class="bg-custom-card rounded-xl p-4 flex flex-col justify-between space-y-2">
+                    <div class="flex items-center justify-between text-brand-textMuted text-xs font-semibold">
+                        <span>CICLO SOLAR</span>
+                        <i class="fa-solid fa-mountain-sun text-orange-400"></i>
+                    </div>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-brand-textMuted flex items-center gap-1"><i class="fa-solid fa-arrow-up text-orange-400"></i> Nascer:</span>
+                            <span class="font-mono font-bold text-brand-textMain" id="sunriseVal">--:--</span>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-brand-border/40 pt-1">
+                            <span class="text-brand-textMuted flex items-center gap-1"><i class="fa-solid fa-arrow-down text-purple-400"></i> Pôr:</span>
+                            <span class="font-mono font-bold text-brand-textMain" id="sunsetVal">--:--</span>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-brand-textMuted text-right">Horário local</div>
+                </div>
+
+            </section>
+
+            <!-- HOURLY FORECAST (PRÓXIMAS 24 HORAS) -->
+            <section class="bg-custom-card rounded-2xl p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-base flex items-center gap-2">
+                        <i class="fa-regular fa-clock accent-color"></i>
+                        Previsão Horária (Próximas 24 Horas)
+                    </h3>
+                    <div class="flex items-center gap-2 bg-brand-darkBg p-1 rounded-lg border border-brand-border text-xs">
+                        <button id="viewCardsBtn" data-action="switch-hourly-view" data-view="cards" class="px-3 py-1 rounded-md bg-brand-cardBg accent-color font-semibold transition-all">Cards</button>
+                        <button id="viewChartBtn" data-action="switch-hourly-view" data-view="chart" class="px-3 py-1 rounded-md text-brand-textMuted hover:text-brand-textMain transition-all">Gráfico</button>
+                    </div>
+                </div>
+
+                <!-- Horizontal Scroll Cards View -->
+                <div id="hourlyCardsContainer" class="flex items-center gap-3 overflow-x-auto pb-2 pt-1 no-scrollbar">
+                    <!-- Cards dynamically filled -->
+                </div>
+
+                <!-- Interactive Canvas Chart View (Hidden by default) -->
+                <div id="hourlyChartContainer" class="hidden h-64 w-full pt-2">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </section>
+
+            <!-- 7-DAY FORECAST SECTION -->
+            <section class="bg-custom-card rounded-2xl p-5 space-y-4">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-days accent-color"></i>
+                    Previsão para os Próximos 7 Dias
+                </h3>
+
+                <div id="dailyForecastContainer" class="divide-y divide-brand-border/60">
+                    <!-- Daily Forecast Rows Dynamically Rendered -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-brand-border bg-brand-cardBg mt-12 py-6 text-xs text-brand-textMuted">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-brand-textMain">APIMETEO</span> &copy; 2026 - Interface Meteorológica Acadêmica
+            </div>
+            <div class="flex items-center gap-4">
+                <span>Fonte dos dados: <a href="https://open-meteo.com/" target="_blank" rel="noopener" class="accent-color hover:underline font-semibold">Open-Meteo API</a></span>
+                <span>•</span>
+                <span>Desenvolvido com Tailwind & Chart.js</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./script.js" defer></script>
+</body>
+</html>
